@@ -1,12 +1,11 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
+import './env.js';
 import express from 'express';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+import tripRoutes from './routes/trips.js';
+import spotRoutes, { tripSpotRoutes } from './routes/spots.js';
+import expenseRoutes, {
+  tripExpenseRoutes,
+  tripSummaryRoutes,
+} from './routes/expenses.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -19,6 +18,14 @@ app.use(express.json());
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, ts: new Date().toISOString() });
 });
+
+// 先挂载更具体的嵌套路径，再挂载 /api/trips 的 :id，避免固定段被误判
+app.use('/api/trips/:tripId/spots', tripSpotRoutes);
+app.use('/api/trips/:tripId/expenses', tripExpenseRoutes);
+app.use('/api/trips/:tripId/summary', tripSummaryRoutes);
+app.use('/api/trips', tripRoutes);
+app.use('/api/spots', spotRoutes);
+app.use('/api/expenses', expenseRoutes);
 
 /**
  * 404 兜底。
