@@ -1,0 +1,14 @@
+{
+  "name": "tripmate-lite",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "test": "npm --prefix server test",
+    "db:init": "psql -d tripmate -f server/db/schema.sql"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
