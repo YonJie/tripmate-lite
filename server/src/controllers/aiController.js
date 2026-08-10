@@ -1,13 +1,11 @@
 import * as tripRepo from '../repositories/tripRepo.js';
-import { buildMockSuggestData } from '../ai/buildMock.js';
-import { callDeepseekSuggest } from '../ai/deepseekClient.js';
-import { validateSuggestData } from '../ai/validateSuggestData.js';
+import { getSuggestion } from '../ai/index.js';
 
 /**
  * 构造带 status / code 的业务错误。
- * @param {string} message
- * @param {number} status
- * @param {string} code
+ * @param {string} message - 中文提示
+ * @param {number} status - HTTP 状态码
+ * @param {string} code - 契约错误码
  * @returns {Error & { status: number, code: string }}
  */
 function createError(message, status, code) {
@@ -16,7 +14,7 @@ function createError(message, status, code) {
 
 /**
  * 解析为正整数；非法返回 null。
- * @param {unknown} raw
+ * @param {unknown} raw - 原始值
  * @returns {number | null}
  */
 function parsePositiveInt(raw) {
@@ -32,8 +30,8 @@ function parsePositiveInt(raw) {
 
 /**
  * 计算含首尾的行程天数。
- * @param {string} startDate
- * @param {string} endDate
+ * @param {string} startDate - YYYY-MM-DD
+ * @param {string} endDate - YYYY-MM-DD
  * @returns {number}
  */
 function calcTripDays(startDate, endDate) {
@@ -44,8 +42,8 @@ function calcTripDays(startDate, endDate) {
 
 /**
  * 判断请求体是否显式提供了某字段（存在且非 null）。
- * @param {Record<string, unknown>} body
- * @param {string} key
+ * @param {Record<string, unknown>} body - 请求体
+ * @param {string} key - 字段名
  * @returns {boolean}
  */
 function hasExplicit(body, key) {
@@ -53,8 +51,8 @@ function hasExplicit(body, key) {
 }
 
 /**
- * 按契约补齐 destination / days / budget。
- * @param {unknown} body
+ * 按契约优先级补齐 destination / days / budget。
+ * @param {unknown} body - 请求体
  * @returns {Promise<{ destination: string, days: number, budget: number }>}
  */
 async function resolveSuggestInput(body) {
@@ -84,8 +82,12 @@ async function resolveSuggestInput(body) {
   }
 
   if (hasExplicit(req, 'budget')) {
-    if (typeof req.budget !== 'number' || !Number.isFinite(req.budget) || req.budget < 0) {
-      throw createError('budget 必须为 >= 0 的 number', 400, 'VALIDATION_ERROR');
+    if (
+      typeof req.budget !== 'number' ||
+      !Number.isFinite(req.budget) ||
+      req.budget < 0
+    ) {
+      throw createError('budget 必须为 >= 0 的数字', 400, 'VALIDATION_ERROR');
     }
     budget = Math.round(req.budget * 100) / 100;
   }
@@ -127,14 +129,14 @@ async function resolveSuggestInput(body) {
   }
 
   if (typeof budget !== 'number' || !Number.isFinite(budget) || budget < 0) {
-    throw createError('budget 必须为 >= 0 的 number', 400, 'VALIDATION_ERROR');
+    throw createError('budget 必须为 >= 0 的数字', 400, 'VALIDATION_ERROR');
   }
 
   return { destination, days, budget };
 }
 
 /**
- * POST /api/ai/suggest —— 真调优先，失败一律 200 + Mock。
+ * POST /api/ai/suggest —— 真调优先；模型失败一律 200 + Mock，不交给 5xx。
  * @param {import('express').Request} req
  * @param {import('express').Response} res
  * @param {import('express').NextFunction} next
@@ -143,42 +145,17 @@ async function resolveSuggestInput(body) {
 export async function suggest(req, res, next) {
   try {
     const input = await resolveSuggestInput(req.body);
-    const generatedAt = new Date().toISOString();
-
-    const deepseek = await callDeepseekSuggest(input);
-    if (deepseek.ok) {
-      res.status(200).json({
-        source: 'deepseek',
-        fallbackReason: null,
-        generatedAt,
-        input,
-        data: deepseek.data,
-      });
-      return;
-    }
-
-    const mockData = buildMockSuggestData(input);
-    const check = validateSuggestData(mockData);
-    if (!check.ok) {
-      // Mock 自身不合格时仍不得 5xx：返回最小可用结构
-      res.status(200).json({
-        source: 'mock',
-        fallbackReason: deepseek.reason,
-        generatedAt,
-        input,
-        data: mockData,
-      });
-      return;
-    }
+    const result = await getSuggestion(input);
 
     res.status(200).json({
-      source: 'mock',
-      fallbackReason: deepseek.reason,
-      generatedAt,
+      source: result.source,
+      fallbackReason: result.fallbackReason,
+      generatedAt: new Date().toISOString(),
       input,
-      data: mockData,
+      data: result.data,
     });
   } catch (err) {
+    // 仅参数校验 / tripId 不存在走 400/404；getSuggestion 本身不抛错
     next(err);
   }
 }

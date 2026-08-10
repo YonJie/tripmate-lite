@@ -152,3 +152,25 @@
 - **自检结果**：`npm test` → **4 files / 6 tests 全部通过**
 - **交接条件**：可继续前端 AI 联调；真调需配置有效 `DEEPSEEK_API_KEY`
 
+### [A] 实现 POST /api/ai/suggest（DeepSeek + Mock 降级）
+- **时间**：17:18
+- **Prompt 摘要**：按契约实现 AI 行程建议；schema/mock/deepseek/index 编排；controller 参数优先级与 tripId 补齐；永不 5xx。
+- **产出文件**：`server/src/ai/schema.js`、`mock.js`、`deepseek.js`、`index.js`、`controllers/aiController.js`、`routes/ai.js`；删除旧 `validateSuggestData.js`/`buildMock.js`/`deepseekClient.js`；`AGENT_LOG.md`
+- **关键决策**：
+  - `getSuggestion` 捕获全部模型失败并 Mock；`fallbackReason` 区分无 Key/超时/HTTP/JSON/schema
+  - Mock：title/items 含目的地；budgetPlan 20/35/25/15/5；tips 恰好 3 条且 ≥2 条相关；候选池随机
+  - JSON 模式 system prompt 含 "json" 与完整结构示例；剥 ```json fence；AbortController 超时
+- **自检结果**：`ai-suggest-mock.test.js` 通过（无 Key → 200 + source=mock）；validateSuggestion(mock) valid；`/api/ai` 已挂载
+- **交接条件**：前端可联调 Assistant；配置有效 `DEEPSEEK_API_KEY` 可走真调；演示时可看终端 `[ai] DeepSeek 降级为 Mock：...`
+
+### [F] 实现 AI 助手页 Assistant.vue
+- **时间**：17:20
+- **Prompt 摘要**：封装 getSuggestion（25s 超时）；实现输入区/结果区（来源徽章、日程、预算条、贴士）；一键 bulk 导入；网络错误 el-result 可重试。
+- **产出文件**：`client/src/api/ai.js`、`client/src/views/Assistant.vue`、`AGENT_LOG.md`
+- **关键决策**：
+  - AI 请求单独 `timeout: 25000`，不改全局 http 超时
+  - 表单字段优先提交；行程选择仅预填；结果区强制展示 deepseek/mock 来源徽章
+  - 导入映射 `{ name, type, estimatedCost, status: '待去' }`，成功 Message 带详情跳转
+- **自检结果**：字段与契约 §5 对齐；骨架屏+提示文案；空态/错误态不白屏；未改 server/
+- **交接条件**：后端 `POST /api/ai/suggest` 与 bulk 就绪后即可联调；无 Key 时应看到 Mock 徽章与 fallbackReason
+

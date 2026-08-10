@@ -3,8 +3,9 @@ import * as aiController from '../controllers/aiController.js';
 
 const router = Router();
 
-router.post('/suggest', (req, res, next) => {
-  aiController.suggest(req, res, next);
-});
+/**
+ * POST /api/ai/suggest
+ */
+router.post('/suggest', aiController.suggest);
 
 export default router;
