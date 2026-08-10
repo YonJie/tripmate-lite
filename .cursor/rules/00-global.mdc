@@ -1,0 +1,59 @@
+---
+description: TripMate Lite 全局协作红线与项目约定（所有 Agent 必须遵守）
+globs: "**/*"
+alwaysApply: true
+---
+
+# 全局规则
+
+你正在参与 TripMate Lite（AI 个人旅行助手 MVP）开发。本产品面向单用户本地使用，**无登录认证**。不得在比赛中擅自加鉴权体系；若赛后公网部署，必须另补鉴权与限流（见附录 D），当前阶段禁止自行实现。
+
+## 技术栈红线（不得擅自替换）
+
+- 后端：Express **^4.21**（禁止 5.x）+ 原生 `pg` 驱动 + ESM（`import`/`export`）
+- 前端：Vue 3 + Vite + Element Plus **全量引入** + JavaScript
+- 禁止：TypeScript、ORM / query builder、Pinia、`unplugin-vue-components` 按需引入、安装 `cors`
+- 开发期由 Vite proxy 同源转发 `/api`，无需 CORS
+
+## 唯一事实来源
+
+- 接口契约以 `docs/API-CONTRACT.md` 为唯一事实来源
+- 任何接口路径、字段名、状态码都必须与该文档完全一致
+- 若你认为契约有问题：必须先提出，得到确认后由规划 Agent 修改契约，**不得自行偏离**
+
+## 命名与类型约定
+
+- 数据库列名：`snake_case`
+- API JSON 字段：一律 `camelCase`；转换在后端 repository 层完成，前端只见 `camelCase`
+- 金额：一律 `number` 类型
+- 日期：一律 `YYYY-MM-DD` 字符串
+- 代码注释：统一 JSDoc；函数必须包含 `@param` 与 `@returns`
+
+## 范围红线（明确不做）
+
+地图导航、支付订单、社交分享、多角色权限、RAG/向量检索、移动端原生。
+
+## 留痕义务
+
+每完成一个任务，必须在项目根目录 `AGENT_LOG.md` **末尾追加**一条记录，固定格式：
+
+```markdown
+### [角色代号] 任务标题
+- **时间**：HH:MM
+- **Prompt 摘要**：
+- **产出文件**：
+- **关键决策**：
+- **自检结果**：
+- **交接条件**：
+```
+
+## 共享追加例外
+
+- `AGENT_LOG.md` 对所有角色开放追加，**不算目录越界**
+- 禁止借此修改其他根目录文件
+
+## 禁止事项
+
+- 不得创建 `.env`
+- 不得在代码中硬编码任何 API Key
+- 不得提交 `node_modules`

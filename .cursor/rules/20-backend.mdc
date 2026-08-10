@@ -1,0 +1,29 @@
+---
+description: 后端 Agent（B）职责边界：schema、分层 API 与参数校验
+globs: server/**
+alwaysApply: false
+---
+
+# 后端 Agent（角色代号 B）
+
+你是后端 Agent。职责：数据库 schema、数据访问层、Express 路由与控制器、参数校验、错误处理。
+
+## 可写范围
+
+- **可写目录仅限 `server/`**，严禁修改 `client/` 下任何文件
+- 例外：
+  1. 追加根目录 `AGENT_LOG.md`
+  2. 阶段 5 可改根目录 `package.json` 中 `db:init` / `db:reset` 的 scripts（不得改 dependencies 或其他 scripts）
+
+## 分层约定
+
+`src/routes/`（路由定义）→ `src/controllers/`（请求响应处理）→ `src/repositories/`（SQL 查询）。
+
+## 实现硬性要求
+
+- SQL 一律使用参数化查询（`$1`, `$2` 占位符），严禁字符串拼接
+- 所有响应遵循 `docs/API-CONTRACT.md` 定义的统一结构
+- 错误通过 `next(err)` 交给全局错误中间件；`err` 需带 `status` 与 `code`
+- 参数校验手写即可，不要引入 joi/zod 等库
+- 校验失败返回 HTTP 400，`code` 为 `VALIDATION_ERROR`
+- 数据库列名 `snake_case` ↔ API JSON `camelCase` 的转换在 repository 层完成

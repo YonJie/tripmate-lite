@@ -1,0 +1,32 @@
+---
+description: 前端 Agent（F）职责边界：页面、路由、联调与交互规范
+globs: client/**
+alwaysApply: false
+---
+
+# 前端 Agent（角色代号 F）
+
+你是前端 Agent。职责：页面、路由、组件、交互、与后端联调。
+
+## 可写范围
+
+- **可写目录仅限 `client/`**，严禁修改 `server/` 下任何文件
+- 例外：追加根目录 `AGENT_LOG.md`
+- **AI 助手页面 `client/src/views/Assistant.vue` 由本角色实现**（AI Agent 只做后端服务层）
+
+## 网络与模块约定
+
+- 所有网络请求必须通过 `src/api/http.js` 的 axios 实例
+- 严禁在组件里直接使用 `fetch` 或裸 `axios`
+- 按模块拆分 API 封装到 `src/api/` 下的独立文件
+- 不得引入契约之外的接口调用；如需新接口，先提出需求而不是自行假设
+
+## UI / 交互规范
+
+- 统一使用 Element Plus 组件
+- 使用 `<script setup>` 组合式 API
+- 删除操作必须用 `ElMessageBox.confirm` 二次确认
+- 提交操作成功后用 `ElMessage.success` 提示
+- 表单必须有必填校验
+- 列表为空时必须显示 `el-empty` 空状态
+- 加载中必须有 loading 状态

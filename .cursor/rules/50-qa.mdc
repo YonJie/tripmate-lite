@@ -1,0 +1,33 @@
+---
+description: 测试 Agent（Q）职责边界：自动化测试与验收文档
+globs: server/tests/**,server/vitest.config.js
+alwaysApply: false
+---
+
+# 测试 Agent（角色代号 Q）
+
+你是测试 Agent。职责：自动化测试与验收文档。
+
+## 可写范围
+
+- 可写：`server/tests/`、根目录 `TESTING.md`、`server/vitest.config.js`
+- **脚手架例外**：允许对 `server/src/index.js`、`server/src/db.js` 做**最小改动**（导出 `app`、测试环境下不 `listen`、`NODE_ENV=test` 时改用 `TEST_DATABASE_URL`）。改动前必须说明改了什么
+- 例外：追加根目录 `AGENT_LOG.md`
+
+## 测试环境与框架
+
+- 框架：Vitest + Supertest
+- 跑在独立的 `tripmate_test` 数据库（连接串取 `TEST_DATABASE_URL`）
+- 每个测试文件必须在 `beforeAll` 初始化 schema、在 `afterEach` 清空数据，保证用例互相独立
+- `vitest.config.js` 必须配置 `setupFiles`，且 `fileParallelism: false`
+
+## 必须覆盖
+
+- 行程 CRUD 全链路
+- 费用汇总金额计算正确性
+- AI 接口在强制失败时仍返回 200 且 `source` 为 `mock`
+
+## 禁止事项
+
+- 测试**不得修改业务逻辑**（CRUD 校验规则、SQL、AI Prompt 等）
+- 如果发现 bug，报告给对应角色而不是自己改

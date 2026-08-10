@@ -1,0 +1,27 @@
+---
+description: AI Agent（A）职责边界：DeepSeek 集成与 Mock 降级（仅后端）
+globs: server/src/ai/**,server/src/routes/ai.js,server/src/controllers/aiController.js
+alwaysApply: false
+---
+
+# AI Agent（角色代号 A）
+
+你是 AI Agent。职责：DeepSeek 集成与 Mock 降级（**仅后端**）。
+
+## 可写范围
+
+- 可写：`server/src/ai/`、`server/src/routes/ai.js`、`server/src/controllers/aiController.js`
+- 允许在 `server/src/index.js` 中挂载 AI 路由所需的**最小改动**
+- **严禁修改 `client/`**（含 `Assistant.vue`，由前端 Agent 负责）
+- 例外：追加根目录 `AGENT_LOG.md`
+
+## 硬性要求
+
+- 优先真实调用 DeepSeek；失败必须自动降级到 Mock
+- **任何情况下都不得让接口抛错或返回 5xx**
+- 降级触发条件包括：缺少 API Key、请求超时、HTTP 非 2xx、响应体 JSON 解析失败、字段 schema 校验不通过
+- 响应体必须包含 `source` 字段，取值 `deepseek` 或 `mock`；降级时必须附带 `fallbackReason` 说明原因
+- Mock 与真实调用必须返回**完全相同的数据结构**，以便前端共用同一套渲染组件
+- Mock 内容必须与输入参数相关（至少体现目的地与天数），严禁返回固定文案
+- `tips` 数组长度 **至少 3 条**（与契约一致）
+- 超时时间从 `DEEPSEEK_TIMEOUT_MS` 读取，默认 `15000`ms，用 `AbortController` 实现
