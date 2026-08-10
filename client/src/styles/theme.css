@@ -12,17 +12,6 @@
   --el-color-primary-dark-2: #0b7f72;
 }
 
-/**
- * 全局页面容器。
- */
-.page-container {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 24px 16px;
-  min-height: 100vh;
-  box-sizing: border-box;
-}
-
 body {
   margin: 0;
   font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
