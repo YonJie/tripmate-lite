@@ -9,19 +9,32 @@ const { Pool, types } = pg;
  */
 types.setTypeParser(1700, parseFloat);
 
-if (!process.env.DATABASE_URL) {
+/**
+ * 将 PostgreSQL DATE（OID 1082）保持为 `YYYY-MM-DD` 字符串。
+ * 默认会转成 JS Date；在 UTC+8 下再用 getUTC* 格式化会少一天。
+ */
+types.setTypeParser(1082, (value) => value);
+
+const isTest = process.env.NODE_ENV === 'test';
+const connectionString = isTest
+  ? process.env.TEST_DATABASE_URL
+  : process.env.DATABASE_URL;
+
+if (!connectionString) {
   throw new Error(
-    'DATABASE_URL 未配置：请检查项目根目录 .env（须在依赖 db 的模块加载前生效）',
+    isTest
+      ? 'TEST_DATABASE_URL 未配置：请检查项目根目录 .env（测试须指向独立库 tripmate_test）'
+      : 'DATABASE_URL 未配置：请检查项目根目录 .env（须在依赖 db 的模块加载前生效）',
   );
 }
 
 /**
- * 基于 DATABASE_URL 的连接池。
+ * 基于 DATABASE_URL（测试环境为 TEST_DATABASE_URL）的连接池。
  * 注意：须先 import './env.js'，否则 ESM 提升会导致连接串为 undefined，
  * 进而出现 SASL “client password must be a string”。
  */
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString,
 });
 
 /**

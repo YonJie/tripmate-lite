@@ -6,6 +6,7 @@ import expenseRoutes, {
   tripExpenseRoutes,
   tripSummaryRoutes,
 } from './routes/expenses.js';
+import aiRoutes from './routes/ai.js';
 
 const app = express();
 const port = Number(process.env.PORT) || 3000;
@@ -26,6 +27,7 @@ app.use('/api/trips/:tripId/summary', tripSummaryRoutes);
 app.use('/api/trips', tripRoutes);
 app.use('/api/spots', spotRoutes);
 app.use('/api/expenses', expenseRoutes);
+app.use('/api/ai', aiRoutes);
 
 /**
  * 404 兜底。
@@ -56,6 +58,13 @@ app.use((err, _req, res, _next) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`[server] listening on http://localhost:${port}`);
-});
+/**
+ * 导出 app 供 Vitest + Supertest 注入；测试环境不 listen，避免占端口。
+ */
+export { app };
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(port, () => {
+    console.log(`[server] listening on http://localhost:${port}`);
+  });
+}

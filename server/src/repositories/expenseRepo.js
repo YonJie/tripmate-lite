@@ -11,6 +11,7 @@ function roundMoney(amount) {
 
 /**
  * 将 pg DATE / Date / 字符串格式化为 YYYY-MM-DD。
+ * db.js 已将 DATE 解析为字符串；若仍收到 Date，用本地年月日避免 UTC+8 少一天。
  * @param {Date | string | null | undefined} value - 原始日期
  * @returns {string | null}
  */
@@ -18,14 +19,14 @@ function formatDateOnly(value) {
   if (value == null) {
     return null;
   }
-  if (value instanceof Date) {
-    const y = value.getUTCFullYear();
-    const m = String(value.getUTCMonth() + 1).padStart(2, '0');
-    const d = String(value.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
   if (typeof value === 'string') {
     return value.slice(0, 10);
+  }
+  if (value instanceof Date) {
+    const y = value.getFullYear();
+    const m = String(value.getMonth() + 1).padStart(2, '0');
+    const d = String(value.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
   }
   return String(value).slice(0, 10);
 }
