@@ -90,18 +90,21 @@ export async function callDeepSeek({ destination, days, budget }) {
     process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com'
   ).replace(/\/$/, '');
   const model = process.env.DEEPSEEK_MODEL || 'deepseek-chat';
-  const timeoutMs = Number(process.env.DEEPSEEK_TIMEOUT_MS) || 15000;
+  const parsedTimeout = Number(process.env.DEEPSEEK_TIMEOUT_MS);
+  const timeoutMs =
+    Number.isFinite(parsedTimeout) && parsedTimeout > 0 ? parsedTimeout : 15000;
 
   const systemPrompt = [
     '你是专业的旅行规划师。根据用户提供的目的地、天数和预算，生成一份行程建议，并以 json 格式返回，结构严格如下（不要输出任何额外文字）：',
     JSON_SHAPE_EXAMPLE,
-    '约束：days 数组长度必须等于用户指定的天数；budgetPlan 各项 amount 之和必须接近用户预算；tips 至少 3 条且要有实际参考价值；所有金额为数字不带货币符号；type 只能取「景点/餐饮/交通/其他」；category 只能取「交通/住宿/餐饮/门票/其他」；time 只能取「上午/下午/晚上」。',
+    '约束：days 数组长度必须等于用户指定的天数；每天 2–4 个 items 即可；budgetPlan 五项齐全且 amount 之和接近用户预算；tips 恰好 3 条且具体可执行；所有金额为数字不带货币符号；type 只能取「景点/餐饮/交通/其他」；category 只能取「交通/住宿/餐饮/门票/其他」；time 只能取「上午/下午/晚上」。请尽量简洁，控制输出长度。',
   ].join('\n');
 
   const userPrompt = `请为目的地「${destination}」规划 ${days} 天行程，总预算约 ${budget} 元。days 长度必须等于 ${days}，内容需与该目的地相关。请只输出 json 对象。`;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
+  const startedAt = Date.now();
 
   try {
     const response = await fetch(`${baseUrl}/chat/completions`, {
@@ -117,6 +120,7 @@ export async function callDeepSeek({ destination, days, budget }) {
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
+        max_tokens: 4096,
         response_format: { type: 'json_object' },
       }),
       signal: controller.signal,
@@ -165,9 +169,14 @@ export async function callDeepSeek({ destination, days, budget }) {
       );
     }
 
+    console.log(`[ai] DeepSeek 成功，耗时 ${Date.now() - startedAt}ms`);
     return data;
   } catch (err) {
-    if (err?.name === 'AbortError') {
+    const aborted =
+      err?.name === 'AbortError' ||
+      err?.code === 'ABORT_ERR' ||
+      /aborted|abort/i.test(String(err?.message || ''));
+    if (aborted && !err?.code) {
       throw createDeepSeekError('请求超时', 'TIMEOUT');
     }
     if (err?.code) {

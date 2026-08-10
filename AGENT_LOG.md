@@ -163,6 +163,17 @@
 - **自检结果**：`ai-suggest-mock.test.js` 通过（无 Key → 200 + source=mock）；validateSuggestion(mock) valid；`/api/ai` 已挂载
 - **交接条件**：前端可联调 Assistant；配置有效 `DEEPSEEK_API_KEY` 可走真调；演示时可看终端 `[ai] DeepSeek 降级为 Mock：...`
 
+### [A] 优化 DeepSeek 超时降级（max_tokens + 超时读取）
+- **时间**：17:25
+- **Prompt 摘要**：真调报「请求超时（15 秒）」；探测 API 可达后收紧生成并加固超时判断。
+- **产出文件**：`server/src/ai/deepseek.js`、`AGENT_LOG.md`
+- **关键决策**：
+  - 探测：Key 有效；短请求 1.5–4.5s；完整 2 日建议约 6s，15s 在慢网/多日时偏紧
+  - 增加 `max_tokens: 4096`、提示词要求简洁；成功打耗时日志；Abort 判断兼容多种 abort 形态
+  - 默认仍 15000；建议 `.env` 将 `DEEPSEEK_TIMEOUT_MS` 调到 `30000` 或 `45000`
+- **自检结果**：本机完整 callDeepSeek(成都/2日) 约 6s 成功；未改 trips/spots/expenses；未改 client/
+- **交接条件**：重启 server；可选加大 `DEEPSEEK_TIMEOUT_MS`；成功看 `[ai] DeepSeek 成功，耗时 …ms`，失败仍 Mock 200
+
 ### [F] 实现 AI 助手页 Assistant.vue
 - **时间**：17:20
 - **Prompt 摘要**：封装 getSuggestion（25s 超时）；实现输入区/结果区（来源徽章、日程、预算条、贴士）；一键 bulk 导入；网络错误 el-result 可重试。
@@ -173,4 +184,16 @@
   - 导入映射 `{ name, type, estimatedCost, status: '待去' }`，成功 Message 带详情跳转
 - **自检结果**：字段与契约 §5 对齐；骨架屏+提示文案；空态/错误态不白屏；未改 server/
 - **交接条件**：后端 `POST /api/ai/suggest` 与 bulk 就绪后即可联调；无 Key 时应看到 Mock 徽章与 fallbackReason
+
+### [Q] 按规格重写核心 API 自动化测试与 TESTING.md
+- **时间**：17:28
+- **Prompt 摘要**：Vitest+Supertest；独立 `tripmate_test`；setup 全局 schema/TRUNCATE/关池；trips/expenses/spots/ai 四文件；重写 TESTING.md（策略/环境/用例表/手测/限制）；不改业务逻辑。
+- **产出文件**：`server/tests/setup.js`、`trips.test.js`、`expenses.test.js`、`spots.test.js`、`ai.test.js`、`server/vitest.config.js`、`TESTING.md`、`AGENT_LOG.md`；删除旧 acceptance/helpers 等测试文件
+- **关键决策**：
+  - `index.js`/`db.js` 脚手架已具备，**本次未再改**（已说明）
+  - setupFiles 承载 beforeAll/afterEach/afterAll；`vitest` `env.NODE_ENV=test` + setup 双保险
+  - AI 用 `vi.stubEnv` 清空 Key；级联用 pool 直查 COUNT；日期断言严格等于请求原值
+  - TESTING.md 用例表对齐赛题第九节 / PRD §7 与附录 A 五条抽检
+- **自检结果**：`npm test` → **4 files / 15 tests 全部通过**；未改业务校验/SQL/AI Prompt
+- **交接条件**：评审可按 TESTING.md §5 手测；自动化以 `npm test` 为准
 
