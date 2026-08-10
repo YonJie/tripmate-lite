@@ -28,6 +28,29 @@
 - **自检结果**：八章齐全；四模块表格与范围红线含「3 小时放弃理由」；验收条含行程/景点/费用/AI（含 DeepSeek 与 Mock 标识）；风险 ≥4 条且含 NUMERIC 与契约不一致；未改任何业务代码
 - **交接条件**：项目经理评审通过后，P 下一步输出并冻结 `docs/API-CONTRACT.md`，再通知 B/F/A 按目录隔离开工
 
+### [B] 创建数据库层（schema + seed + db 脚本）
+- **时间**：16:45
+- **Prompt 摘要**：按 API-CONTRACT / PRD 实体定义创建 `server/db/schema.sql` 与 `seed.sql`；更新根 `package.json` 的 `db:init`/`db:reset`；确认 `db.js` 已注册 NUMERIC→number 解析。
+- **产出文件**：`server/db/schema.sql`、`server/db/seed.sql`、根 `package.json`（仅 scripts）、`AGENT_LOG.md`
+- **关键决策**：
+  - 三表字段/CHECK/级联与契约及任务说明逐字对齐；`estimated_cost` DEFAULT 0 对齐「未传=0」
+  - schema 开头 `DROP ... CASCADE` 保证可重复执行；`spots.trip_id` / `expenses.trip_id` 建索引；表与关键列加 COMMENT
+  - seed 用子查询取最新成都行程 id，避免硬编码 SERIAL，保证 schema 后可独立执行
+  - `db:init`/`db:reset` 均用 `psql -U postgres -d tripmate` 依次执行 schema+seed；密码依赖 `PGPASSWORD` 或 pgpass
+  - `server/src/db.js` 已有 OID 1700 `parseFloat` 解析器与 JSDoc，未改动
+- **自检结果**：表结构与 PRD 3.1–3.3 / 契约枚举一致；仅改允许的 scripts；未改 `client/`、未改 dependencies、未创建 `.env`
+- **交接条件**：本地需已建库 `tripmate` 且 `psql` 可用；执行 `npm run db:init`（或 `db:reset`）后即可进入 trips/spots/expenses API 实现
+
+### [B] 修复 db:init Windows 中文编码错误
+- **时间**：16:48
+- **Prompt 摘要**：`npm run db:init` 报 GBK→UTF8 字符无对应值；修复 schema/seed 与 db 脚本编码。
+- **产出文件**：`server/db/schema.sql`、`server/db/seed.sql`、根 `package.json`（仅 db:* scripts）、`AGENT_LOG.md`
+- **关键决策**：
+  - SQL 文件开头增加 `SET client_encoding TO 'UTF8';`
+  - `db:init`/`db:reset` 增加 `PGCLIENTENCODING=UTF8`（cmd `set`），并加 `-v ON_ERROR_STOP=1` 避免半成功继续执行
+- **自检结果**：根因与终端 L81–L102 编码错误对齐；本环境 psql 可能因缺密码挂起未复跑成功，需用户本机再执行 `npm run db:init`
+- **交接条件**：用户在项目根目录重跑 `npm run db:init`，应无 GBK 编码报错；成功后三表+种子数据就绪
+
 ### [P] 撰写并冻结 API-CONTRACT.md（v1）
 - **时间**：16:37
 - **Prompt 摘要**：撰写前后端唯一事实来源 `docs/API-CONTRACT.md`；覆盖全局约定与全量接口；日志须明确「契约已冻结，版本 v1」。

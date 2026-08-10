@@ -6,7 +6,8 @@
     "dev": "concurrently -n server,client -c blue,green \"npm --prefix server run dev\" \"npm --prefix client run dev\"",
     "install:all": "npm --prefix server install && npm --prefix client install",
     "test": "npm --prefix server test",
-    "db:init": "psql -d tripmate -f server/db/schema.sql"
+    "db:init": "set PGCLIENTENCODING=UTF8&& psql -U postgres -d tripmate -v ON_ERROR_STOP=1 -f server/db/schema.sql && set PGCLIENTENCODING=UTF8&& psql -U postgres -d tripmate -v ON_ERROR_STOP=1 -f server/db/seed.sql",
+    "db:reset": "set PGCLIENTENCODING=UTF8&& psql -U postgres -d tripmate -v ON_ERROR_STOP=1 -f server/db/schema.sql && set PGCLIENTENCODING=UTF8&& psql -U postgres -d tripmate -v ON_ERROR_STOP=1 -f server/db/seed.sql"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
