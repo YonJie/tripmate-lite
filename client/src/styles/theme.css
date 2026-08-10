@@ -1,0 +1,31 @@
+/**
+ * Element Plus 主色覆盖：旅行感青绿色。
+ * 基色 #0E9F8E，并同步 light / dark 系列变量。
+ */
+:root {
+  --el-color-primary: #0e9f8e;
+  --el-color-primary-light-3: #4eb7aa;
+  --el-color-primary-light-5: #7ec9bf;
+  --el-color-primary-light-7: #aedbd5;
+  --el-color-primary-light-8: #c6e7e2;
+  --el-color-primary-light-9: #def3f0;
+  --el-color-primary-dark-2: #0b7f72;
+}
+
+/**
+ * 全局页面容器。
+ */
+.page-container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: linear-gradient(180deg, #f3faf8 0%, #eef6f4 100%);
+  color: #1f2d2b;
+}
