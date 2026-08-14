@@ -1,0 +1,43 @@
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#e8f6f4", "primaryTextColor": "#1a3a36", "primaryBorderColor": "#0e9f8e", "lineColor": "#4a6b66", "actorBkg": "#e8f6f4", "actorBorder": "#0e9f8e", "actorTextColor": "#1a3a36", "signalColor": "#4a6b66", "signalTextColor": "#1a3a36", "noteBkgColor": "#fff6e8", "noteTextColor": "#1a3a36", "fontFamily": "Microsoft YaHei, PingFang SC, sans-serif", "fontSize": "15px"}}}%%
+sequenceDiagram
+  autonumber
+  actor U as 用户
+  participant V as Vue /assistant
+  participant E as Express /api
+  participant D as DeepSeek
+  participant P as PostgreSQL
+
+  U->>V: 打开 /assistant，可选从行程预填
+  U->>V: 提交目的地 / 天数 / 预算
+  V->>E: POST /api/ai/suggest
+
+  Note over E: 表单字段优先；tripId 只补齐缺失项
+
+  alt tripId 指向的行程不存在
+    E-->>V: 404 NOT_FOUND
+    V-->>U: 错误页，可重试
+  else 补齐后仍缺必填，或天数不在 1–15
+    E-->>V: 400 VALIDATION_ERROR
+    V-->>U: 错误页，可重试
+  else 入参合法
+    E->>D: chat/completions
+
+    alt 真调成功且结构校验通过
+      D-->>E: 结构化建议 JSON
+      E-->>V: 200 source=deepseek
+    else 无 Key / 超时 / 非 2xx / JSON 或 schema 失败
+      Note over E,D: 模型失败仍返回 200，禁止 5xx
+      E-->>V: 200 source=mock + fallbackReason
+    end
+
+    V-->>U: 徽章 + 日程 / 预算拆分 / tips
+
+    opt 一键导入为景点清单
+      U->>V: 选行程、勾选条目、确认
+      V->>E: POST /api/trips/:id/spots/bulk
+      E->>P: 事务 INSERT spots
+      P-->>E: Spot[]
+      E-->>V: 201
+      V-->>U: 成功，可跳转 /trips/:id
+    end
+  end
