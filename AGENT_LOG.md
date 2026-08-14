@@ -326,3 +326,12 @@ flowchart LR
 ---
 
 *文档维护：规划 Agent（P）。事实以本文件条目与 git 历史为准；有出入以 git 与当时产出文件为准。*
+
+### [P] 按截图目录固化详细设计 Skill 并重出 Word
+- **时间**：14:42
+- **Prompt 摘要**：参考资产管理系统详细设计文档与截图目录，固化可复用 Skill，并按该目录覆盖生成 TripMate Lite 详细设计说明书 Word。
+- **产出文件**：个人技能 `~/.cursor/skills/detailed-design-doc/`（SKILL.md、outline.md、module-template.md）；`docs/TripMate-Lite-详细设计说明书.docx`（覆盖）。`docs/_gen-design-doc.cjs` 已不存在，无需删除。
+- **关键决策**：目录以截图为骨架（不含通用化/压测/资源团队）；功能点强制【界面】【逻辑说明】六段式；第 5 章仅开发时间表；Skill 放个人目录、显式调用；契约冲突以 API-CONTRACT v1 为准。
+- **自检结果**：Word 约 21 页；抽查封面、目录（引言/方案架构/功能模块/难点/时间表）、功能点六段、第 5 章时间表，排版正常。
+- **交接条件**：可用 `/detailed-design-doc` 在其他项目复用；TripMate Word 位于 `docs/TripMate-Lite-详细设计说明书.docx`。
+
