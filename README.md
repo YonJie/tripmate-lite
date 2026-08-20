@@ -217,6 +217,7 @@ tripmate-lite/
 |------|------|
 | [docs/PRD.md](./docs/PRD.md) | 需求与规划、范围红线、验收标准 |
 | [docs/API-CONTRACT.md](./docs/API-CONTRACT.md) | 接口契约（v1 冻结，前后端唯一事实来源） |
+| [docs/06-演示脚本.md](./docs/06-演示脚本.md) | 5 分钟现场演示台本（主链路 / 检查清单 / 答问预案） |
 | [TESTING.md](./TESTING.md) | 自动化测试说明与手工验收清单 |
 | [AGENT_LOG.md](./AGENT_LOG.md) | 多 Agent 协同任务留痕 |
 
